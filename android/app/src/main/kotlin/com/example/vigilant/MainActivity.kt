@@ -1,4 +1,4 @@
-package com.example.vigilant // Make sure this matches your actual package name
+package com.example.wifisecurity // Make sure this matches your actual package name
 
 import android.app.AppOpsManager
 import android.content.Context
@@ -10,7 +10,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterActivity() {
     // A single, consistent channel name
-    private val CHANNEL = "com.vigilant.app/data_usage"
+    private val CHANNEL = "com.wifisecurity.app/data_usage"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
