@@ -106,7 +106,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(user.displayName ?? 'Vigilant User', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(user.displayName ?? 'WiFi Security User', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Text(user.email ?? 'No email'),
                     ],
                   ),
