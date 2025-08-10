@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 class UsagePermissionHelper {
   // Use a consistent channel name for all communications
-  static const _platform = MethodChannel('com.vigilant.app/data_usage');
+  static const _platform = MethodChannel('com.wifisecurity.app/data_usage');
 
   // Check if the usage access permission is granted by calling native Android code
   static Future<bool> hasUsagePermission() async {
