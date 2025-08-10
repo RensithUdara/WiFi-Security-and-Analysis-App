@@ -16,17 +16,17 @@ void main() async {
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeManager(),
-      child: VigilentApp(),
+      child: WiFiSecurityApp(),
     ),
   );
 }
 
-class VigilentApp extends StatelessWidget {
+class WiFiSecurityApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
     return NeumorphicApp(
-      title: 'Vigilent WiFi Manager',
+      title: 'WiFi Security',
       themeMode: themeManager.themeMode, // Controlled by the ThemeManager
       theme: NeumorphicThemeData(
         baseColor: Color(0xFFE0E5EC),
