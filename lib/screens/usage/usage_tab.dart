@@ -116,7 +116,7 @@ class _UsageTabState extends State<UsageTab> with WidgetsBindingObserver {
             SizedBox(height: 20),
             Text('Permission Required', style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
             SizedBox(height: 12),
-            Text('To show data usage, Vigilant needs "Usage Access" permission.\n\nAfter granting it, please return to the app and press the refresh button.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
+            Text('To show data usage, WiFi Security needs "Usage Access" permission.\n\nAfter granting it, please return to the app and press the refresh button.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
             SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

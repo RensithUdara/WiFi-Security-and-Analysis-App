@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 
 class DataUsageService {
   // Use a consistent channel name that matches the native code
-  static const _platform = MethodChannel('com.vigilant.app/data_usage');
+  static const _platform = MethodChannel('com.wifisecurity.app/data_usage');
 
   // Call the native method to get data usage stats.
   Future<Map<String, double>> getUsage() async {
