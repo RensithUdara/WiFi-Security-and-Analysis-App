@@ -41,38 +41,84 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildBottomNavBar() {
     return Container(
-      color: NeumorphicTheme.baseColor(context),
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      height: 85,
+      decoration: BoxDecoration(
+        color: NeumorphicTheme.baseColor(context),
+        boxShadow: [
+          BoxShadow(
+            color: NeumorphicTheme.baseColor(context).withOpacity(0.8),
+            offset: Offset(0, -8),
+            blurRadius: 20,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.wifi_tethering_rounded, 0),
-            _buildNavItem(Icons.devices_other_rounded, 1),
-            _buildNavItem(Icons.speed_rounded, 2),
-            _buildNavItem(Icons.data_usage_rounded, 3),
-            _buildNavItem(Icons.person_outline_rounded, 4),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.wifi_find_rounded, 'Scan', 0),
+              _buildNavItem(Icons.devices_rounded, 'Devices', 1),
+              _buildNavItem(Icons.speed_rounded, 'Speed', 2),
+              _buildNavItem(Icons.analytics_rounded, 'Usage', 3),
+              _buildNavItem(Icons.account_circle_outlined, 'Profile', 4),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
+  Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
-    return NeumorphicButton(
-      onPressed: () => _onItemTapped(index),
-      style: NeumorphicStyle(
-        shape: NeumorphicShape.flat,
-        boxShape: NeumorphicBoxShape.circle(),
-        depth: isSelected ? -5 : 5,
-        lightSource: LightSource.topLeft,
-        color: isSelected ? Color(0xFFCAD8E8) : NeumorphicTheme.baseColor(context),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Icon(
-        icon,
-        color: isSelected ? Colors.blue.shade600 : NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onItemTapped(index),
+        child: Container(
+          height: 60,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Neumorphic(
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.flat,
+                  boxShape: NeumorphicBoxShape.circle(),
+                  depth: isSelected ? -4 : 2,
+                  lightSource: LightSource.topLeft,
+                  color: isSelected 
+                    ? NeumorphicTheme.accentColor(context).withOpacity(0.1)
+                    : NeumorphicTheme.baseColor(context),
+                  shadowLightColor: Colors.white.withOpacity(0.9),
+                  shadowDarkColor: Colors.grey.withOpacity(0.3),
+                ),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  child: Icon(
+                    icon,
+                    size: 22,
+                    color: isSelected 
+                      ? NeumorphicTheme.accentColor(context)
+                      : NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+                  ),
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected 
+                    ? NeumorphicTheme.accentColor(context)
+                    : NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
