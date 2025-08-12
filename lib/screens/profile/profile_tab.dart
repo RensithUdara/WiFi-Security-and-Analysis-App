@@ -448,75 +448,254 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Widget _buildHistorySection() {
-                    child: Icon(Icons.person, size: 30),
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(user.displayName ?? 'WiFi Security User', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text(user.email ?? 'No email'),
-                    ],
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recent Activity',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: NeumorphicTheme.defaultTextColor(context),
                   ),
                 ),
                 Consumer<ThemeManager>(
-                  builder: (context, themeManager, child) => NeumorphicSwitch(
-                    value: themeManager.themeMode == ThemeMode.dark,
-                    onChanged: (value) {
-                      themeManager.toggleTheme(value);
-                    },
+                  builder: (context, themeManager, child) => Neumorphic(
+                    style: NeumorphicStyle(
+                      depth: -2,
+                      boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(20)),
+                    ),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            themeManager.themeMode == ThemeMode.dark 
+                              ? Icons.dark_mode_rounded 
+                              : Icons.light_mode_rounded,
+                            size: 16,
+                            color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                          ),
+                          SizedBox(width: 8),
+                          NeumorphicSwitch(
+                            value: themeManager.themeMode == ThemeMode.dark,
+                            onChanged: (value) {
+                              themeManager.toggleTheme(value);
+                            },
+                            style: NeumorphicSwitchStyle(
+                              thumbColor: NeumorphicTheme.accentColor(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                SizedBox(width: 8),
-                NeumorphicButton(
-                  onPressed: () => _auth.signOut(),
-                  style: NeumorphicStyle(boxShape: NeumorphicBoxShape.circle()),
-                  child: Icon(Icons.logout, color: Colors.red),
-                )
               ],
             ),
-          ),
+            SizedBox(height: 16),
+            _buildHistoryList(),
+          ],
         ),
-        Divider(),
-        Expanded(child: _buildHistoryList(user.uid)),
-      ],
+      ),
     );
   }
 
-  Widget _buildHistoryList(String uid) {
-    final speedTestStream = FirebaseFirestore.instance.collection('users').doc(uid).collection('speedTestHistory').snapshots();
-    final scanHistoryStream = FirebaseFirestore.instance.collection('users').doc(uid).collection('scanHistory').snapshots();
-    final usageHistoryStream = FirebaseFirestore.instance.collection('users').doc(uid).collection('usageHistory').snapshots();
+  Widget _buildHistoryList() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return SizedBox.shrink();
 
-    final combinedStream = StreamZip([speedTestStream, scanHistoryStream, usageHistoryStream]);
+    final speedTestStream = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('speedTestHistory')
+        .orderBy('timestamp', descending: true)
+        .limit(10)
+        .snapshots();
 
-    return StreamBuilder<List<QuerySnapshot>>(
-      key: _historyListKey, // Using the key to force rebuild on refresh
-      stream: combinedStream,
+    return StreamBuilder<QuerySnapshot>(
+      key: _historyListKey,
+      stream: speedTestStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(NeumorphicTheme.accentColor(context)),
+              ),
+            ),
+          );
         }
 
-        List<Map<String, dynamic>> historyItems = [];
-        if (snapshot.hasData) {
-          final speedTestDocs = snapshot.data![0].docs;
-          for (var doc in speedTestDocs) {
-            historyItems.add({...(doc.data() as Map<String, dynamic>), 'type': 'speedTest'});
-          }
-
-          final scanHistoryDocs = snapshot.data![1].docs;
-          for (var doc in scanHistoryDocs) {
-            historyItems.add({...(doc.data() as Map<String, dynamic>), 'type': 'wifiScan'});
-          }
-
-          final usageHistoryDocs = snapshot.data![2].docs;
-          for (var doc in usageHistoryDocs) {
-            historyItems.add({...(doc.data() as Map<String, dynamic>), 'type': 'usageHistory'});
-          }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return _buildEmptyHistory();
         }
+
+        return Column(
+          children: snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return _buildHistoryItem(data);
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyHistory() {
+    return Container(
+      padding: EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Icon(
+            Icons.history_rounded,
+            size: 48,
+            color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.3),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No activity yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Your WiFi scans and speed tests will appear here',
+            style: TextStyle(
+              fontSize: 14,
+              color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.5),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryItem(Map<String, dynamic> data) {
+    IconData icon;
+    Color color;
+    String title;
+    String subtitle;
+
+    switch (data['type']) {
+      case 'speedTest':
+        icon = Icons.speed_rounded;
+        color = Colors.blue;
+        title = 'Speed Test';
+        subtitle = '${data['downloadSpeed']?.toStringAsFixed(1) ?? 'N/A'} Mbps';
+        break;
+      case 'wifiScan':
+        icon = Icons.wifi_find_rounded;
+        color = Colors.green;
+        title = 'WiFi Scan';
+        subtitle = '${data['networksFound'] ?? 0} networks found';
+        break;
+      default:
+        icon = Icons.analytics_rounded;
+        color = Colors.purple;
+        title = 'Activity';
+        subtitle = 'Recorded';
+    }
+
+    final timestamp = data['timestamp'] as Timestamp?;
+    final dateStr = timestamp != null 
+        ? DateFormat('MMM dd, HH:mm').format(timestamp.toDate())
+        : 'Unknown time';
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      child: Neumorphic(
+        style: NeumorphicStyle(
+          depth: 2,
+          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
+          color: NeumorphicTheme.baseColor(context),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HistoryDetailScreen(data: data),
+                ),
+              );
+            },
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: color, size: 20),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: NeumorphicTheme.defaultTextColor(context),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        dateStr,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.5),
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 12,
+                        color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.3),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
         historyItems.sort((a, b) {
           DateTime getDate(Map<String, dynamic> item) {
