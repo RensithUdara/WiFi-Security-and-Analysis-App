@@ -31,30 +31,15 @@ class _ProfileTabState extends State<ProfileTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NeumorphicTheme.baseColor(context),
-      appBar: NeumorphicAppBar(
-        title: Text('Profile & History'),
-        actions: [
-          // Added a refresh button to the AppBar
-          StreamBuilder<User?>(
-              stream: _auth.authStateChanges(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data != null) {
-                  return NeumorphicButton(
-                    onPressed: _refreshHistory,
-                    style: NeumorphicStyle(boxShape: NeumorphicBoxShape.circle()),
-                    child: Icon(Icons.refresh, color: NeumorphicTheme.defaultTextColor(context)),
-                  );
-                }
-                return SizedBox.shrink(); // Hide button if logged out
-              }
-          ),
-        ],
-      ),
       body: StreamBuilder<User?>(
         stream: _auth.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(NeumorphicTheme.accentColor(context)),
+              ),
+            );
           }
           if (snapshot.hasData && snapshot.data != null) {
             return _buildLoggedInView(snapshot.data!);
@@ -66,38 +51,403 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Widget _buildLoggedOutView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 200,
+          floating: false,
+          pinned: true,
+          backgroundColor: NeumorphicTheme.baseColor(context),
+          elevation: 0,
+          flexibleSpace: FlexibleSpaceBar(
+            title: Text(
+              'Profile',
+              style: TextStyle(
+                color: NeumorphicTheme.defaultTextColor(context),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            background: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    NeumorphicTheme.baseColor(context),
+                    NeumorphicTheme.baseColor(context).withOpacity(0.8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        SliverFillRemaining(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Neumorphic(
+                  style: NeumorphicStyle(
+                    depth: 8,
+                    boxShape: NeumorphicBoxShape.circle(),
+                    color: NeumorphicTheme.baseColor(context),
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.all(32),
+                    child: Icon(
+                      Icons.account_circle_outlined,
+                      size: 80,
+                      color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.4),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                Text(
+                  'Welcome to WiFi Security',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: NeumorphicTheme.defaultTextColor(context),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Sign in to save your scan history, track network security alerts, and access advanced features.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 40),
+                Neumorphic(
+                  style: NeumorphicStyle(
+                    depth: 4,
+                    boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(30)),
+                    color: NeumorphicTheme.accentColor(context),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(30),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => LoginScreen()),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.login_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'SIGN IN',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24),
+                TextButton(
+                  onPressed: () {
+                    // Add sign up navigation if needed
+                  },
+                  child: Text(
+                    'Don\'t have an account? Sign up',
+                    style: TextStyle(
+                      color: NeumorphicTheme.accentColor(context),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoggedInView(User user) {
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 280,
+          floating: false,
+          pinned: true,
+          backgroundColor: NeumorphicTheme.baseColor(context),
+          elevation: 0,
+          flexibleSpace: FlexibleSpaceBar(
+            background: _buildProfileHeader(user),
+          ),
+          actions: [
+            Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Neumorphic(
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.flat,
+                  boxShape: NeumorphicBoxShape.circle(),
+                  depth: 2,
+                ),
+                child: IconButton(
+                  onPressed: _refreshHistory,
+                  icon: Icon(
+                    Icons.refresh_rounded,
+                    color: NeumorphicTheme.defaultTextColor(context),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SliverToBoxAdapter(
+          child: _buildQuickActions(),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, 8, 16, 100),
+          sliver: _buildHistorySection(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileHeader(User user) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            NeumorphicTheme.baseColor(context),
+            NeumorphicTheme.baseColor(context).withOpacity(0.9),
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              SizedBox(height: 40),
+              Neumorphic(
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.flat,
+                  boxShape: NeumorphicBoxShape.circle(),
+                  depth: 8,
+                  color: NeumorphicTheme.baseColor(context),
+                ),
+                child: Container(
+                  padding: EdgeInsets.all(4),
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: NeumorphicTheme.accentColor(context).withOpacity(0.1),
+                    backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+                    child: user.photoURL == null
+                        ? Icon(
+                            Icons.person,
+                            size: 50,
+                            color: NeumorphicTheme.accentColor(context),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                user.displayName ?? 'WiFi Security User',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: NeumorphicTheme.defaultTextColor(context),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                user.email ?? '',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildStatusBadge(
+                    icon: Icons.verified_user_rounded,
+                    label: 'Verified',
+                    color: Colors.green,
+                  ),
+                  SizedBox(width: 16),
+                  _buildStatusBadge(
+                    icon: Icons.security_rounded,
+                    label: 'Secure',
+                    color: Colors.blue,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.login, size: 80, color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.2)),
-          SizedBox(height: 16),
-          Text('Sign in to save and view your history.', style: TextStyle(fontSize: 16)),
-          SizedBox(height: 20),
-          NeumorphicButton(
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => LoginScreen()));
-            },
-            child: Text('SIGN IN'),
-          )
+          Icon(icon, size: 16, color: color),
+          SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildLoggedInView(User user) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Neumorphic(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+  Widget _buildQuickActions() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: NeumorphicTheme.defaultTextColor(context),
+            ),
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.settings_rounded,
+                  title: 'Settings',
+                  subtitle: 'App preferences',
+                  color: Colors.blue,
+                  onTap: () {
+                    // Navigate to settings
+                  },
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.logout_rounded,
+                  title: 'Sign Out',
+                  subtitle: 'Logout safely',
+                  color: Colors.red,
+                  onTap: () async {
+                    await _auth.signOut();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Neumorphic(
+      style: NeumorphicStyle(
+        depth: 3,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(16)),
+        color: NeumorphicTheme.baseColor(context),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
               children: [
-                Neumorphic(
-                  style: NeumorphicStyle(boxShape: NeumorphicBoxShape.circle(), depth: 4),
-                  child: CircleAvatar(
-                    radius: 30,
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 24,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: NeumorphicTheme.defaultTextColor(context),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistorySection() {
                     child: Icon(Icons.person, size: 30),
                   ),
                 ),
