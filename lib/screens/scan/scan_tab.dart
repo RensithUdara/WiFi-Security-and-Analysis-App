@@ -252,23 +252,67 @@ class _ScanTabState extends State<ScanTab> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Neumorphic(
         style: NeumorphicStyle(
-          depth: -5,
-          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
-          color: Colors.amber.withOpacity(0.2),
+          depth: -3,
+          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(16)),
+          color: Colors.red.withOpacity(0.05),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800, size: 22),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Weakly secured networks detected nearby.',
-                  style: TextStyle(color: Colors.amber.shade900, fontWeight: FontWeight.bold),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: [
+                Colors.red.withOpacity(0.1),
+                Colors.orange.withOpacity(0.1),
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.security_rounded,
+                    color: Colors.red.shade700,
+                    size: 24,
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Security Alert',
+                        style: TextStyle(
+                          color: Colors.red.shade800,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Weak or open networks detected nearby. Avoid connecting to unsecured networks.',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.red.shade600,
+                  size: 16,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -340,96 +384,281 @@ class _ScanTabState extends State<ScanTab> {
 
   Widget _buildWifiList() {
     if (_isLoading && _networks.isEmpty) {
-      return Center(child: CircularProgressIndicator());
-    }
-    if (_networks.isEmpty) {
-      return Center(
-        child: Text("No WiFi networks found.\nEnsure location is enabled and press refresh.", textAlign: TextAlign.center),
+      return SliverToBoxAdapter(
+        child: Container(
+          height: 200,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(NeumorphicTheme.accentColor(context)),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Scanning for networks...',
+                  style: TextStyle(
+                    color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
-    return RefreshIndicator(
-      onRefresh: _refreshScan,
-      child: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: _networks.length,
-        itemBuilder: (context, index) => _buildWifiListItem(_networks[index]),
+    if (_networks.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Container(
+          height: 200,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 64,
+                  color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.3),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "No WiFi networks found",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Ensure location is enabled and pull down to refresh",
+                  style: TextStyle(
+                    color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.5),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => _buildWifiListItem(_networks[index]),
+        childCount: _networks.length,
       ),
     );
   }
 
   Widget _buildWifiListItem(WiFiNetwork network) {
-    Color signalColor;
-    if (network.signalStrength > -60) signalColor = Colors.green;
-    else if (network.signalStrength > -75) signalColor = Colors.orange;
-    else signalColor = Colors.red;
-
+    Color signalColor = _getSignalColor(network.signalStrength);
+    
     IconData securityIcon;
-    switch(network.security){
-      case "WPA3": securityIcon = Icons.lock_rounded; break;
-      case "WPA2": securityIcon = Icons.lock_outline_rounded; break;
-      case "WEP": securityIcon = Icons.lock_open_rounded; break;
-      default: securityIcon = Icons.lock_open_rounded;
+    Color securityColor;
+    String securityText;
+    
+    switch(network.security) {
+      case "WPA3":
+        securityIcon = Icons.verified_user_rounded;
+        securityColor = Colors.green;
+        securityText = "WPA3";
+        break;
+      case "WPA2":
+        securityIcon = Icons.lock_rounded;
+        securityColor = Colors.blue;
+        securityText = "WPA2";
+        break;
+      case "WEP":
+        securityIcon = Icons.no_encryption_rounded;
+        securityColor = Colors.orange;
+        securityText = "WEP";
+        break;
+      default:
+        securityIcon = Icons.lock_open_rounded;
+        securityColor = Colors.red;
+        securityText = "Open";
     }
 
-    return NeumorphicButton(
-      margin: EdgeInsets.only(bottom: 16),
-      onPressed: () {
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => ScanDetailScreen(network: network)
-        ));
-      },
-      padding: const EdgeInsets.all(12),
-      style: NeumorphicStyle(
-        depth: network.isConnected ? 8 : 4,
-        border: network.isConnected
-            ? NeumorphicBorder(color: Colors.blue.shade300, width: 1.5)
-            : NeumorphicBorder.none(),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.wifi, color: signalColor, size: 28),
-              SizedBox(width: 16),
-              Expanded(
-                child: Text(network.ssid, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      child: Neumorphic(
+        style: NeumorphicStyle(
+          depth: network.isConnected ? 6 : 3,
+          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(16)),
+          color: network.isConnected 
+            ? NeumorphicTheme.accentColor(context).withOpacity(0.05)
+            : NeumorphicTheme.baseColor(context),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => ScanDetailScreen(network: network)
+            ));
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: network.isConnected ? BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: NeumorphicTheme.accentColor(context).withOpacity(0.3),
+                width: 2,
               ),
-              if (network.isRogue)
-                Icon(Icons.warning_amber_rounded, color: Colors.amber.shade700, size: 22),
-              SizedBox(width: 12),
-              Icon(securityIcon, color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7), size: 22),
-              SizedBox(width: 12),
-              Text("${network.signalStrength}", style: TextStyle(fontWeight: FontWeight.bold, color: signalColor)),
-            ],
-          ),
-          if (network.isConnected) ...[
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            ) : null,
+            child: Column(
               children: [
-                Neumorphic(
-                  style: NeumorphicStyle(
-                    depth: -2,
-                    color: Colors.blue.withOpacity(0.1),
-                    boxShape: NeumorphicBoxShape.stadium(),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Text(
-                      'CONNECTED',
-                      style: TextStyle(
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                Row(
+                  children: [
+                    // WiFi Signal Icon with strength indicator
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: signalColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _getWifiIcon(network.signalStrength),
+                        color: signalColor,
+                        size: 24,
                       ),
                     ),
-                  ),
+                    SizedBox(width: 16),
+                    
+                    // Network Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  network.ssid,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: NeumorphicTheme.defaultTextColor(context),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (network.isConnected)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'CONNECTED',
+                                    style: TextStyle(
+                                      color: Colors.green.shade700,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: 6),
+                          Row(
+                            children: [
+                              // Security Badge
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: securityColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      securityIcon,
+                                      size: 12,
+                                      color: securityColor,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      securityText,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                        color: securityColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              
+                              // Channel Info
+                              Text(
+                                'Ch ${network.channel}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+                                ),
+                              ),
+                              
+                              Spacer(),
+                              
+                              // Signal Strength
+                              Text(
+                                '${network.signalStrength} dBm',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: signalColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    SizedBox(width: 12),
+                    
+                    // Action/Status Indicators
+                    Column(
+                      children: [
+                        if (network.isRogue)
+                          Container(
+                            padding: EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.warning_rounded,
+                              color: Colors.red,
+                              size: 18,
+                            ),
+                          ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.4),
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
-            )
-          ]
-        ],
+            ),
+          ),
+        ),
       ),
     );
+  }
+
+  IconData _getWifiIcon(int signalStrength) {
+    if (signalStrength >= -50) return Icons.wifi_rounded;
+    if (signalStrength >= -70) return Icons.wifi_2_bar_rounded;
+    return Icons.wifi_1_bar_rounded;
   }
 }
