@@ -584,59 +584,6 @@ class _SpeedTabState extends State<SpeedTab> {
     );
   }
 
-  void _resetState() {
-    setState(() {
-      _currentSpeed = 0.0;
-      _downloadSpeed = 0.0;
-      _uploadSpeed = 0.0;
-      _ping = 0;
-      _percent = 0;
-      _status = 'Ready to test';
-      _isTesting = false;
-      _server = '';
-      _ip = '';
-      _isp = '';
-      _connectionType = '';
-    });
-  }
-
-  void _saveResult() async {
-    if (_downloadSpeed <= 0) return;
-    
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('speedTestHistory')
-          .add({
-        'downloadSpeed': _downloadSpeed,
-        'uploadSpeed': _uploadSpeed,
-        'ping': _ping,
-        'server': _server,
-        'ip': _ip,
-        'isp': _isp,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Speed test result saved'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save result'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   Widget _buildHistoryChart() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
