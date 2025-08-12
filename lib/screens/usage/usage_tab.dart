@@ -4,7 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../api/data_usage_service.dart';
 import '../../api/firestore_service.dart';
 import '../../models/data_usage_model.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../utils/usage_permission_helper.dart';
 
 class UsageTab extends StatefulWidget {
@@ -437,20 +436,62 @@ class _UsageTabState extends State<UsageTab> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildDataLimitSlider(String title, double value, ValueChanged<double> onChanged) {
-    return Neumorphic(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Text('$title Limit: ${value.toStringAsFixed(1)} GB'),
-          NeumorphicSlider(
-            min: 1,
-            max: 100,
-            value: value,
-            onChanged: onChanged,
+  Widget _buildDataLimitSlider(String title, double value, ValueChanged<double> onChanged, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              title == 'Mobile' ? Icons.signal_cellular_alt_rounded : Icons.wifi_rounded,
+              color: color,
+              size: 16,
+            ),
+            SizedBox(width: 8),
+            Text(
+              '$title Limit',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: NeumorphicTheme.defaultTextColor(context),
+              ),
+            ),
+            Spacer(),
+            Text(
+              '${value.toStringAsFixed(1)} GB',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
+        Neumorphic(
+          style: NeumorphicStyle(
+            depth: -2,
+            boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(25)),
           ),
-        ],
-      ),
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 4,
+              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8),
+              overlayShape: RoundSliderOverlayShape(overlayRadius: 16),
+              activeTrackColor: color,
+              inactiveTrackColor: color.withOpacity(0.2),
+              thumbColor: color,
+              overlayColor: color.withOpacity(0.2),
+            ),
+            child: Slider(
+              min: 1,
+              max: 100,
+              value: value,
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
