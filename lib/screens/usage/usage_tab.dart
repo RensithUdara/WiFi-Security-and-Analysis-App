@@ -166,32 +166,131 @@ class _UsageTabState extends State<UsageTab> with WidgetsBindingObserver {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 60, color: Colors.grey),
-            SizedBox(height: 20),
-            Text('Permission Required', style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
-            SizedBox(height: 12),
-            Text('To show data usage, WiFi Security needs "Usage Access" permission.\n\nAfter granting it, please return to the app and press the refresh button.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
-            SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: Neumorphic(
+          style: NeumorphicStyle(
+            depth: -4,
+            boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(20)),
+            color: NeumorphicTheme.baseColor(context),
+          ),
+          child: Container(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                NeumorphicButton(
-                  onPressed: UsagePermissionHelper.requestUsagePermission,
-                  child: Text('Open Settings'),
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Icon(
+                    Icons.security_rounded,
+                    size: 48,
+                    color: Colors.orange,
+                  ),
                 ),
-                SizedBox(width: 16),
-                NeumorphicButton(
-                  onPressed: _checkPermissionAndFetchData,
-                  style: NeumorphicStyle(boxShape: NeumorphicBoxShape.circle()),
-                  padding: const EdgeInsets.all(16),
-                  child: Icon(Icons.refresh, color: NeumorphicTheme.defaultTextColor(context)),
+                SizedBox(height: 24),
+                Text(
+                  'Permission Required',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: NeumorphicTheme.defaultTextColor(context),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'To monitor data usage, WiFi Security needs "Usage Access" permission.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                    height: 1.5,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'After granting permission, return to the app and tap refresh.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+                    height: 1.5,
+                  ),
+                ),
+                SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Neumorphic(
+                        style: NeumorphicStyle(
+                          depth: 4,
+                          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(25)),
+                          color: NeumorphicTheme.accentColor(context),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(25),
+                            onTap: UsagePermissionHelper.requestUsagePermission,
+                            child: Container(
+                              height: 50,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.settings_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'OPEN SETTINGS',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Neumorphic(
+                      style: NeumorphicStyle(
+                        depth: 3,
+                        boxShape: NeumorphicBoxShape.circle(),
+                        color: NeumorphicTheme.baseColor(context),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(25),
+                          onTap: _checkPermissionAndFetchData,
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            child: Icon(
+                              Icons.refresh_rounded,
+                              color: NeumorphicTheme.defaultTextColor(context),
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            )
-          ],
+            ),
+          ),
         ),
       ),
     );
@@ -199,7 +298,30 @@ class _UsageTabState extends State<UsageTab> with WidgetsBindingObserver {
 
   Widget _buildUsageView(DataUsageModel? usage) {
     if (usage == null) {
-      return Center(child: Text("Could not load data."));
+      return Center(
+        child: Container(
+          padding: EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.5),
+              ),
+              SizedBox(height: 16),
+              Text(
+                "Could not load data",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: NeumorphicTheme.defaultTextColor(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     final mobileUsageMb = usage.mobile;
@@ -211,43 +333,106 @@ class _UsageTabState extends State<UsageTab> with WidgetsBindingObserver {
 
     return RefreshIndicator(
       onRefresh: _checkPermissionAndFetchData,
-      child: ListView(
-        padding: const EdgeInsets.all(16.0),
+      color: NeumorphicTheme.accentColor(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(child: _buildDataLimitSlider('Mobile', _mobileDataLimitGb, (val) => setState(() => _mobileDataLimitGb = val))),
-              SizedBox(width: 16),
-              Expanded(child: _buildDataLimitSlider('WiFi', _wifiDataLimitGb, (val) => setState(() => _wifiDataLimitGb = val))),
-            ],
-          ),
+          _buildUsageOverview(usage),
           SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(child: _buildUsageCard('WiFi Usage', wifiUsageMb, FontAwesomeIcons.wifi)),
-              SizedBox(width: 16),
-              Expanded(child: _buildUsageCard('Mobile Usage', mobileUsageMb, FontAwesomeIcons.mobileScreenButton)),
-            ],
-          ),
+          _buildDataLimitControls(),
           SizedBox(height: 24),
-          // Added back the original pie chart
-          Text("Overall Usage Breakdown", style: Theme.of(context).textTheme.titleLarge),
-          SizedBox(height: 16),
-          _buildOverallPieChart(usage),
+          _buildUsageBreakdown(usage),
           SizedBox(height: 24),
-          Text("Usage vs. Limit Breakdown", style: Theme.of(context).textTheme.titleLarge),
-          SizedBox(height: 16),
-          _buildLimitPieChartArea(usage),
-          SizedBox(height: 24),
-          if (mobileLimitExceeded) _buildWarningBanner('Mobile', _mobileDataLimitGb),
-          if (wifiLimitExceeded) SizedBox(height: 12),
-          if (wifiLimitExceeded) _buildWarningBanner('WiFi', _wifiDataLimitGb),
-          SizedBox(height: 24),
-          NeumorphicButton(
-            onPressed: _saveUsageHistory,
-            child: SizedBox(width: double.infinity, child: Center(child: Text('SAVE HISTORY', style: TextStyle(fontWeight: FontWeight.bold)))),
-          )
+          if (mobileLimitExceeded || wifiLimitExceeded) ...[
+            _buildWarningsSection(mobileLimitExceeded, wifiLimitExceeded),
+            SizedBox(height: 24),
+          ],
+          _buildActionButtons(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUsageOverview(DataUsageModel usage) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildUsageCard(
+            'WiFi Usage',
+            usage.wifi,
+            Icons.wifi_rounded,
+            Colors.blue,
+            _wifiDataLimitGb * 1024,
+          ),
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: _buildUsageCard(
+            'Mobile Usage',
+            usage.mobile,
+            Icons.signal_cellular_alt_rounded,
+            Colors.green,
+            _mobileDataLimitGb * 1024,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDataLimitControls() {
+    return Neumorphic(
+      style: NeumorphicStyle(
+        depth: -2,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(16)),
+        color: NeumorphicTheme.baseColor(context),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.tune_rounded,
+                  color: NeumorphicTheme.accentColor(context),
+                  size: 20,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'Data Limits',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: NeumorphicTheme.defaultTextColor(context),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDataLimitSlider(
+                    'Mobile',
+                    _mobileDataLimitGb,
+                    (val) => setState(() => _mobileDataLimitGb = val),
+                    Colors.green,
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: _buildDataLimitSlider(
+                    'WiFi',
+                    _wifiDataLimitGb,
+                    (val) => setState(() => _wifiDataLimitGb = val),
+                    Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
