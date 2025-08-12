@@ -4,7 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../api/data_usage_service.dart';
 import '../../api/firestore_service.dart';
 import '../../models/data_usage_model.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../utils/usage_permission_helper.dart';
 
 class UsageTab extends StatefulWidget {
@@ -437,35 +436,241 @@ class _UsageTabState extends State<UsageTab> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildDataLimitSlider(String title, double value, ValueChanged<double> onChanged) {
-    return Neumorphic(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Text('$title Limit: ${value.toStringAsFixed(1)} GB'),
-          NeumorphicSlider(
-            min: 1,
-            max: 100,
-            value: value,
-            onChanged: onChanged,
+  Widget _buildDataLimitSlider(String title, double value, ValueChanged<double> onChanged, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              title == 'Mobile' ? Icons.signal_cellular_alt_rounded : Icons.wifi_rounded,
+              color: color,
+              size: 16,
+            ),
+            SizedBox(width: 8),
+            Text(
+              '$title Limit',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: NeumorphicTheme.defaultTextColor(context),
+              ),
+            ),
+            Spacer(),
+            Text(
+              '${value.toStringAsFixed(1)} GB',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
+        Neumorphic(
+          style: NeumorphicStyle(
+            depth: -2,
+            boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(25)),
           ),
-        ],
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 4,
+              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8),
+              overlayShape: RoundSliderOverlayShape(overlayRadius: 16),
+              activeTrackColor: color,
+              inactiveTrackColor: color.withOpacity(0.2),
+              thumbColor: color,
+              overlayColor: color.withOpacity(0.2),
+            ),
+            child: Slider(
+              min: 1,
+              max: 100,
+              value: value,
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsageCard(String title, double valueMb, IconData icon, Color color, double limitMb) {
+    final usageGb = valueMb / 1024;
+    final limitGb = limitMb / 1024;
+    final percentage = (valueMb / limitMb * 100).clamp(0, 100);
+    final isOverLimit = valueMb >= limitMb;
+
+    return Neumorphic(
+      style: NeumorphicStyle(
+        depth: 4,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(20)),
+        color: NeumorphicTheme.baseColor(context),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+                Spacer(),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isOverLimit ? Colors.red.withOpacity(0.1) : color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${percentage.toInt()}%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isOverLimit ? Colors.red : color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '${usageGb.toStringAsFixed(2)} GB',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: NeumorphicTheme.defaultTextColor(context),
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'of ${limitGb.toStringAsFixed(1)} GB',
+              style: TextStyle(
+                fontSize: 12,
+                color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.6),
+              ),
+            ),
+            SizedBox(height: 16),
+            Container(
+              height: 6,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(3),
+                color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.1),
+              ),
+              child: FractionallySizedBox(
+                widthFactor: (percentage / 100).clamp(0.0, 1.0),
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: isOverLimit ? Colors.red : color,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildUsageCard(String title, double value, IconData icon) {
-    return Neumorphic(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 24, color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7)),
+  Widget _buildUsageBreakdown(DataUsageModel usage) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Usage Breakdown',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: NeumorphicTheme.defaultTextColor(context),
+          ),
+        ),
+        SizedBox(height: 16),
+        _buildOverallPieChart(usage),
+      ],
+    );
+  }
+
+  Widget _buildWarningsSection(bool mobileExceeded, bool wifiExceeded) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Warnings',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
+        SizedBox(height: 16),
+        if (mobileExceeded)
+          _buildWarningBanner('Mobile', _mobileDataLimitGb),
+        if (mobileExceeded && wifiExceeded)
           SizedBox(height: 12),
-          Text(title, style: TextStyle(fontSize: 16)),
-          SizedBox(height: 4),
-          Text('${value.toStringAsFixed(2)} MB', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        ],
+        if (wifiExceeded)
+          _buildWarningBanner('WiFi', _wifiDataLimitGb),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Neumorphic(
+      style: NeumorphicStyle(
+        depth: 4,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(25)),
+        color: NeumorphicTheme.accentColor(context),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          onTap: _saveUsageHistory,
+          child: Container(
+            height: 60,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.save_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'SAVE HISTORY',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
