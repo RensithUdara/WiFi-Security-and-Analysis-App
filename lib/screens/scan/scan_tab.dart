@@ -97,7 +97,7 @@ class _ScanTabState extends State<ScanTab> {
                     end: Alignment.bottomRight,
                     colors: [
                       NeumorphicTheme.baseColor(context),
-                      NeumorphicTheme.variantColor(context) ?? NeumorphicTheme.baseColor(context),
+                      NeumorphicTheme.baseColor(context).withOpacity(0.8),
                     ],
                   ),
                 ),
@@ -142,7 +142,7 @@ class _ScanTabState extends State<ScanTab> {
             child: Column(
               children: [
                 _buildStatusCards(connectedNetwork),
-                _buildLiveChart(connectedNetwork),
+                _buildLiveChart(),
                 if (hasWeakSecurity) _buildSecurityBanner(),
                 SizedBox(height: 8),
               ],
@@ -155,6 +155,96 @@ class _ScanTabState extends State<ScanTab> {
         ],
       ),
     );
+  }
+
+  Widget _buildStatusCards(WiFiNetwork connectedNetwork) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatusCard(
+              icon: Icons.wifi_rounded,
+              title: 'Connected',
+              value: connectedNetwork.ssid != 'No Connection' ? connectedNetwork.ssid : 'Not Connected',
+              color: connectedNetwork.ssid != 'No Connection' ? Colors.green : Colors.orange,
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: _buildStatusCard(
+              icon: Icons.signal_wifi_4_bar_rounded,
+              title: 'Signal',
+              value: connectedNetwork.signalStrength != 0 ? '${connectedNetwork.signalStrength} dBm' : 'N/A',
+              color: _getSignalColor(connectedNetwork.signalStrength),
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: _buildStatusCard(
+              icon: Icons.router_rounded,
+              title: 'Networks',
+              value: '${_networks.length}',
+              color: Colors.blue,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return Neumorphic(
+      style: NeumorphicStyle(
+        depth: 4,
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12)),
+        lightSource: LightSource.topLeft,
+      ),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 28,
+            ),
+            SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: NeumorphicTheme.defaultTextColor(context),
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getSignalColor(int signalStrength) {
+    if (signalStrength >= -50) return Colors.green;
+    if (signalStrength >= -70) return Colors.orange;
+    return Colors.red;
   }
 
   Widget _buildSecurityBanner() {
