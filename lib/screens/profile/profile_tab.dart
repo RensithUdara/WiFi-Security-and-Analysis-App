@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:async/async.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../utils/theme_manager.dart';
@@ -692,96 +690,6 @@ class _ProfileTabState extends State<ProfileTab> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-        historyItems.sort((a, b) {
-          DateTime getDate(Map<String, dynamic> item) {
-            if (item['timestamp'] != null) return (item['timestamp'] as Timestamp).toDate();
-            if (item['scannedAt'] != null) return DateTime.tryParse(item['scannedAt'] ?? '') ?? DateTime(1970);
-            if (item['date'] != null) return DateTime.tryParse(item['date'] ?? '') ?? DateTime(1970);
-            return DateTime(1970);
-          }
-          return getDate(b).compareTo(getDate(a));
-        });
-
-        if (historyItems.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.history_toggle_off_rounded, size: 80, color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.2)),
-                SizedBox(height: 16),
-                Text('No History Found', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                Text('Your saved scans and tests will appear here.', style: TextStyle(color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7))),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: historyItems.length,
-          itemBuilder: (context, index) {
-            final item = historyItems[index];
-            if (item['type'] == 'speedTest') {
-              return _buildHistoryItem(
-                icon: FontAwesomeIcons.tachometerAlt,
-                title: 'Speed Test',
-                subtitle: '↓ ${item['downloadSpeedMbps']?.toStringAsFixed(2)} Mbps • ↑ ${item['uploadSpeedMbps']?.toStringAsFixed(2)} Mbps',
-                date: (item['timestamp'] as Timestamp?)?.toDate(),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => HistoryDetailScreen(historyItem: item))),
-              );
-            } else if (item['type'] == 'wifiScan') {
-              return _buildHistoryItem(
-                icon: FontAwesomeIcons.wifi,
-                title: 'WiFi Scan: ${item['ssid']}',
-                subtitle: 'Security: ${item['security']} • Signal: ${item['signalStrength']} dBm',
-                date: DateTime.tryParse(item['scannedAt'] ?? ''),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => HistoryDetailScreen(historyItem: item))),
-              );
-            } else {
-              return _buildHistoryItem(
-                  icon: FontAwesomeIcons.chartPie,
-                  title: 'Data Usage Log',
-                  subtitle: 'WiFi: ${item['wifi_mb']?.toStringAsFixed(2)} MB • Mobile: ${item['mobile_mb']?.toStringAsFixed(2)} MB',
-                  date: DateTime.tryParse(item['date'] ?? ''),
-                  onTap: () {} // No detail view for usage logs yet
-              );
-            }
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildHistoryItem({required IconData icon, required String title, required String subtitle, DateTime? date, VoidCallback? onTap}) {
-    return NeumorphicButton(
-      margin: const EdgeInsets.only(bottom: 12),
-      onPressed: onTap,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(icon, color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7)),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(subtitle, style: TextStyle(color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7))),
-              ],
-            ),
-          ),
-          if (date != null)
-            Text(
-              DateFormat('MMM d, yy').format(date),
-              style: TextStyle(fontSize: 12, color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.5)),
-            ),
-        ],
       ),
     );
   }
