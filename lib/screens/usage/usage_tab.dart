@@ -86,10 +86,67 @@ class _UsageTabState extends State<UsageTab> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NeumorphicTheme.baseColor(context),
-      appBar: NeumorphicAppBar(
-        title: Text("Data Usage"),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120,
+            floating: false,
+            pinned: true,
+            backgroundColor: NeumorphicTheme.baseColor(context),
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'Data Usage',
+                style: TextStyle(
+                  color: NeumorphicTheme.defaultTextColor(context),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              ),
+              titlePadding: EdgeInsets.only(left: 20, bottom: 16),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      NeumorphicTheme.baseColor(context),
+                      NeumorphicTheme.baseColor(context).withOpacity(0.8),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: NeumorphicButton(
+                  style: NeumorphicStyle(
+                    boxShape: NeumorphicBoxShape.circle(),
+                    depth: 3,
+                  ),
+                  padding: EdgeInsets.all(12),
+                  onPressed: _checkPermissionAndFetchData,
+                  child: Icon(
+                    Icons.refresh_rounded,
+                    size: 20,
+                    color: NeumorphicTheme.defaultTextColor(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SliverPadding(
+            padding: EdgeInsets.all(20),
+            sliver: SliverToBoxAdapter(
+              child: _buildBody(),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 100),
+          ),
+        ],
       ),
-      body: _buildBody(),
     );
   }
 
