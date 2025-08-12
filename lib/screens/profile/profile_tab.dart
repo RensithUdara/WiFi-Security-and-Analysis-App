@@ -487,9 +487,6 @@ class _ProfileTabState extends State<ProfileTab> {
                             onChanged: (value) {
                               themeManager.toggleTheme(value);
                             },
-                            style: NeumorphicSwitchStyle(
-                              thumbColor: NeumorphicTheme.accentColor(context),
-                            ),
                           ),
                         ],
                       ),
@@ -627,7 +624,7 @@ class _ProfileTabState extends State<ProfileTab> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HistoryDetailScreen(data: data),
+                  builder: (context) => HistoryDetailScreen(historyItem: data),
                 ),
               );
             },
