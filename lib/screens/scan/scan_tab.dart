@@ -68,26 +68,90 @@ class _ScanTabState extends State<ScanTab> {
   @override
   Widget build(BuildContext context) {
     bool hasWeakSecurity = _networks.any((n) => n.security == "WEP" || n.security == "OPEN");
+    final connectedNetwork = _networks.firstWhere((n) => n.isConnected, orElse: () => WiFiNetwork(ssid: 'No Connection', bssid: '', frequency: 0, signalStrength: 0, security: '', channel: 0));
 
     return Scaffold(
       backgroundColor: NeumorphicTheme.baseColor(context),
-      appBar: NeumorphicAppBar(
-        title: Text("WiFi Scanner"),
-        actions: [
-          NeumorphicButton(
-            onPressed: _isLoading ? null : _refreshScan,
-            style: NeumorphicStyle(boxShape: NeumorphicBoxShape.circle()),
-            child: _isLoading
-                ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5))
-                : Icon(Icons.refresh, color: NeumorphicTheme.defaultTextColor(context)),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120,
+            floating: false,
+            pinned: true,
+            backgroundColor: NeumorphicTheme.baseColor(context),
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'WiFi Scanner',
+                style: TextStyle(
+                  color: NeumorphicTheme.defaultTextColor(context),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              ),
+              titlePadding: EdgeInsets.only(left: 20, bottom: 16),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      NeumorphicTheme.baseColor(context),
+                      NeumorphicTheme.variantColor(context) ?? NeumorphicTheme.baseColor(context),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: 20, top: 8),
+                child: Neumorphic(
+                  style: NeumorphicStyle(
+                    shape: NeumorphicShape.flat,
+                    boxShape: NeumorphicBoxShape.circle(),
+                    depth: _isLoading ? -2 : 4,
+                    color: _isLoading 
+                      ? NeumorphicTheme.accentColor(context).withOpacity(0.1)
+                      : NeumorphicTheme.baseColor(context),
+                  ),
+                  child: IconButton(
+                    onPressed: _isLoading ? null : _refreshScan,
+                    icon: _isLoading
+                        ? SizedBox(
+                            width: 20, 
+                            height: 20, 
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                NeumorphicTheme.accentColor(context),
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            Icons.refresh_rounded,
+                            color: NeumorphicTheme.defaultTextColor(context),
+                            size: 24,
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildLiveChart(),
-          if(hasWeakSecurity) _buildSecurityBanner(),
-          Expanded(child: _buildWifiList()),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                _buildStatusCards(connectedNetwork),
+                _buildLiveChart(connectedNetwork),
+                if (hasWeakSecurity) _buildSecurityBanner(),
+                SizedBox(height: 8),
+              ],
+            ),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 100),
+            sliver: _buildWifiList(),
+          ),
         ],
       ),
     );
