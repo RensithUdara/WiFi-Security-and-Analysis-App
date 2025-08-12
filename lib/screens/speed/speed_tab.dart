@@ -583,122 +583,58 @@ class _SpeedTabState extends State<SpeedTab> {
       ),
     );
   }
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              SizedBox(height: 24),
-              _buildSpeedometer(),
-              SizedBox(height: 16),
-              Text(_status, style: TextStyle(fontSize: 18)),
-              SizedBox(height: 16),
-              _buildStats(),
-              SizedBox(height: 24),
-              _buildActionButton(),
-              SizedBox(height: 24),
-              if (_status == 'Speed test finished' || _status == 'Test Stopped') ...[
-                Text("Historical Download Speed", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                _buildHistoryChart(),
-              ]
-            ],
-          ),
+
+  void _resetState() {
+    setState(() {
+      _currentSpeed = 0.0;
+      _downloadSpeed = 0.0;
+      _uploadSpeed = 0.0;
+      _ping = 0;
+      _percent = 0;
+      _status = 'Ready to test';
+      _isTesting = false;
+      _server = '';
+      _ip = '';
+      _isp = '';
+      _connectionType = '';
+    });
+  }
+
+  void _saveResult() async {
+    if (_downloadSpeed <= 0) return;
+    
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('speedTestHistory')
+          .add({
+        'downloadSpeed': _downloadSpeed,
+        'uploadSpeed': _uploadSpeed,
+        'ping': _ping,
+        'server': _server,
+        'ip': _ip,
+        'isp': _isp,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Speed test result saved'),
+          backgroundColor: Colors.green,
         ),
-      ),
-    );
-  }
-
-  Widget _buildSpeedometer() {
-    final isDarkMode = NeumorphicTheme.isUsingDark(context);
-    return CustomPaint(
-      size: Size(250, 250),
-      painter: SpeedometerPainter(speed: _currentSpeed, isDarkMode: isDarkMode),
-      child: SizedBox(
-        width: 250,
-        height: 250,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_currentSpeed.toStringAsFixed(2), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold)),
-              Text('Mbps', style: TextStyle(fontSize: 20)),
-            ],
-          ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save result'),
+          backgroundColor: Colors.red,
         ),
-      ),
-    );
-  }
-
-  Widget _buildStats() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      alignment: WrapAlignment.center,
-      children: [
-        _buildStatCard('Download', '${_downloadSpeed.toStringAsFixed(2)} Mbps'),
-        _buildStatCard('Upload', '${_uploadSpeed.toStringAsFixed(2)} Mbps'),
-        _buildStatCard('Ping', '${_ping}ms'),
-        if (_isTesting || _status == 'Speed test finished') ...[
-          _buildStatCard('Server', _server.isNotEmpty ? _server : '...'),
-          _buildStatCard('ISP', _isp.isNotEmpty ? _isp : '...'),
-          _buildStatCard('IP Address', _ip.isNotEmpty ? _ip : '...'),
-        ]
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String title, String value) {
-    return SizedBox(
-      width: 110,
-      child: Neumorphic(
-        style: NeumorphicStyle(depth: 4, boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12))),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Text(title, style: TextStyle(fontSize: 14, color: NeumorphicTheme.defaultTextColor(context).withOpacity(0.7))),
-            SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton() {
-    if (_isTesting) {
-      return NeumorphicButton(
-        onPressed: _stopTest,
-        style: NeumorphicStyle(boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(50)), depth: 5, color: Colors.redAccent),
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-        child: Text('STOP TEST', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
       );
     }
-
-    if (_status == 'Speed test finished' || _status == 'Test Stopped' || _status == 'Error Occurred') {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          NeumorphicButton(
-            onPressed: () => _resetState(clearStatus: true),
-            style: NeumorphicStyle(boxShape: NeumorphicBoxShape.circle()),
-            padding: const EdgeInsets.all(20),
-            child: Icon(Icons.refresh, size: 30),
-          ),
-          if (_status == 'Speed test finished')
-            NeumorphicButton(
-              onPressed: _saveResult,
-              style: NeumorphicStyle(color: Colors.blueAccent, boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(12))),
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-              child: Text('Save Result', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-        ],
-      );
-    }
-
-    return NeumorphicButton(
-      onPressed: _startTest,
-      style: NeumorphicStyle(boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(50)), depth: 5, color: Colors.green),
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-      child: Text('START TEST', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-    );
   }
 
   Widget _buildHistoryChart() {
