@@ -66,3 +66,7 @@ app.*.map.json
 /android/app/release
 node_modules
 .vscode/
+.env
+.env.*
+.env.local
+.env.production
